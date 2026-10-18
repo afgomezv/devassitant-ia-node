@@ -1,20 +1,48 @@
-import config from "./config.js";
+import { askClaude } from "./llm/anthropic-client.js";
+import { CODE_REVIEWER_PROMPT } from "./llm/prompts.js";
 
-function main(): void {
+const CODIGO_CON_PROBLEMAS = `
+async function getUser(id) {
+  const query = "SELECT * FROM users WHERE id = " + id;
+  const result = await db.query(query);
+  return result[0];
+}
+function calcularDescuento(precio, tipo) {
+  if (tipo == "vip") {
+    return precio * 0.8;
+  } else if (tipo == "regular") {
+    return precio * 0.9;
+  } else {
+    return precio;
+  }
+}
+`;
+
+async function main(): Promise<void> {
   console.log("╔════════════════════════════════════════╗");
   console.log("║        DevAssistant - Curso IA         ║");
+  console.log("║            System Prompts.             ║");
   console.log("╚════════════════════════════════════════╝");
   console.log("");
-  console.log("✅ DevAssistant configurado correctamente");
+  console.log("Demo 1: Enviado código SIN system prompt");
   console.log("");
-  console.log("📋 Configuración activa:");
-  console.log(`   • Provider:       ${config.provider}`);
-  console.log(`   • Modelo Anthropic: ${config.anthropicModel} `);
-  console.log(`   • Modelo OpenAI: ${config.openaiModel}  `);
-  console.log(`   • Docs path: ${config.docsPath}      `);
-  console.log(`   • RAG top-K: ${config.ragTopK}      `);
+  const question = `Revisa este código:\n\`\`\`javascript\n ${CODIGO_CON_PROBLEMAS}\`\`\``;
+  console.log(` Pregunta: ${question}`);
+  const answer = await askClaude(question);
+  console.log("-".repeat(50));
+  console.log(answer);
+  console.log("-".repeat(50));
   console.log("");
-  console.log("🚀 Próximo paso: Sección 3 — Primera llamada a Claude API");
+
+  console.log("Demo 2: Enviado código CON system prompt");
+  console.log("");
+  const question2 = `Revisa este código:\n\`\`\`javascript\n ${CODIGO_CON_PROBLEMAS}\`\`\``;
+  console.log(` Pregunta: ${question2}`);
+  const reviewPromptAnswer = await askClaude(question, CODE_REVIEWER_PROMPT);
+  console.log("-".repeat(50));
+  console.log(reviewPromptAnswer);
+  console.log("-".repeat(50));
+  console.log("");
 }
 
-main();
+main().catch((error: Error) => console.error("Error:", error.message));
